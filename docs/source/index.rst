@@ -29,7 +29,7 @@
          <img src="https://img.shields.io/badge/python-v3-brightgreen.svg"
             alt="python">
       </a>
-      <a href="https://pypi.org/project/lib-pybroker/">
+      <a href="https://pypi.org/project/pybroker/">
          <img src="https://img.shields.io/badge/pypi-v2.0.1-brightgreen.svg"
             alt="PyPI">
       </a>
@@ -45,8 +45,8 @@
          <img src="https://github.com/inputdrive/pybroker/actions/workflows/main.yml/badge.svg?event=push"
             alt="Package status">
       </a>
-      <a href="https://pepy.tech/project/lib-pybroker">
-         <img src="https://static.pepy.tech/badge/lib-pybroker" alt="Downloads">
+      <a href="https://pepy.tech/project/pybroker">
+         <img src="https://static.pepy.tech/badge/pybroker" alt="Downloads">
       </a>
       <br>
       <a href="https://github.com/inputdrive/pybroker/">

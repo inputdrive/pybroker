@@ -27,6 +27,7 @@ coverage.xml
 # Local environments and secrets.
 # .venv* also covers .venv-bench and other checkout-local envs.
 .venv*
+.dev/
 .env
 .env.*
 !.env.example

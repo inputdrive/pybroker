@@ -17,7 +17,7 @@ sizing, disk caching of data/indicators/models, and parallelized
 computation. Bar data comes from built-in data sources (Alpaca, Yahoo
 Finance, AKShare) or any user-supplied DataFrame/`DataSource`.
 
-Import name `pybroker`, PyPI name `lib-pybroker`. Version is
+Import name and distribution name are `pybroker`. Version is
 single-sourced at `src/pybroker/__init__.py:__version__` (setup.cfg reads
 it via `attr:`). Work integrates on `dev`; PRs target `dev`, and `master`
 is the release branch. This

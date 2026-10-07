@@ -6,7 +6,7 @@ PyBroker using ``pip``:
 
 .. code-block:: console
 
-    pip install -U lib-pybroker
+    pip install -U pybroker
 
 Or you can clone the Git repository with:
 
