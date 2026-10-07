@@ -8,7 +8,7 @@ import numpy as np
 from numba import njit
 
 import pybroker
-from pybroker import Strategy, StrategyConfig, YFinance, indicator, returns
+from pybroker import Strategy, YFinance, indicator, returns
 
 pybroker.disable_progress_bar()
 pybroker.disable_logging()
@@ -70,7 +70,6 @@ if __name__ == "__main__":
         YFinance(),
         start_date="2020-01-01",
         end_date="2025-12-31",
-        config=StrategyConfig(initial_cash=1554.04),
     )
     strategy.add_execution(
         momentum_exec,

@@ -52,6 +52,7 @@ docs/_build/
 # docs/source/notebooks/data stay committable.
 /sample_data.csv
 /equity_curve_*.csv
+/benchmarks/wf_*.csv
 
 # Editors and OS junk.
 .idea/
