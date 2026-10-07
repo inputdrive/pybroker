@@ -10,7 +10,9 @@ Software: PyBroker
 
 License: Apache 2.0 with Commons Clause
 
-Licensor: Edward West
+Licensor: Greg Gutman
+The original work remains copyright 2023 Edward West. That notice stays
+in place. From 2026, Greg is the licensor of this repository going forward.
                                  
                                  Apache License
                            Version 2.0, January 2004
@@ -201,6 +203,7 @@ Licensor: Edward West
       identification within third-party archives.
 
    Copyright 2023 Edward West
+   Copyright 2026 Greg Gutman
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.

@@ -41,16 +41,16 @@
          <img src="https://readthedocs.org/projects/pybroker/badge/?version=latest"
             alt="Documentation Status">
       </a>
-      <a href="https://github.com/edtechre/pybroker/actions">
-         <img src="https://github.com/edtechre/pybroker/actions/workflows/main.yml/badge.svg?event=push"
+      <a href="https://github.com/inputdrive/pybroker/actions">
+         <img src="https://github.com/inputdrive/pybroker/actions/workflows/main.yml/badge.svg?event=push"
             alt="Package status">
       </a>
       <a href="https://pepy.tech/project/lib-pybroker">
          <img src="https://static.pepy.tech/badge/lib-pybroker" alt="Downloads">
       </a>
       <br>
-      <a href="https://github.com/edtechre/pybroker/">
-         <img src="https://img.shields.io/github/stars/edtechre/pybroker?style=social" alt="Github stars">
+      <a href="https://github.com/inputdrive/pybroker/">
+         <img src="https://img.shields.io/github/stars/inputdrive/pybroker?style=social" alt="Github stars">
       </a>
       <a href="https://twitter.com/intent/follow?screen_name=libpybroker">
          <img src="https://img.shields.io/twitter/follow/libpybroker?style=social" alt="Twitter">
@@ -170,7 +170,7 @@ To learn how to use PyBroker, see the notebooks under the *User Guide*:
    notebooks/FAQs
 
 `The notebooks above are also available on Github
-<https://github.com/edtechre/pybroker/tree/master/docs/source/notebooks>`_.
+<https://github.com/inputdrive/pybroker/tree/master/docs/source/notebooks>`_.
 
 AI Agent Skills
 ===============

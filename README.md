@@ -1,11 +1,11 @@
-<img src="https://github.com/edtechre/pybroker/blob/master/docs/_static/pybroker-logo.png?raw=true" alt="PyBroker">
+<img src="https://github.com/inputdrive/pybroker/blob/master/docs/_static/pybroker-logo.png?raw=true" alt="PyBroker">
 
 [![python](https://img.shields.io/badge/python-v3-brightgreen.svg)](https://www.python.org/)
 [![Apache 2.0 with Commons Clause](https://img.shields.io/badge/license-Apache%202.0%20Clause-green)](https://www.pybroker.com/en/latest/license.html)
 [![Documentation Status](https://readthedocs.org/projects/pybroker/badge/?version=latest)](https://www.pybroker.com/en/latest/?badge=latest)
-[![Package status](https://github.com/edtechre/pybroker/actions/workflows/main.yml/badge.svg?event=push)](https://github.com/edtechre/pybroker/actions)
+[![Package status](https://github.com/inputdrive/pybroker/actions/workflows/main.yml/badge.svg?event=push)](https://github.com/inputdrive/pybroker/actions)
 [![Downloads](https://static.pepy.tech/badge/lib-pybroker)](https://pepy.tech/project/lib-pybroker)
-[![Github stars](https://img.shields.io/github/stars/edtechre/pybroker?style=social)](https://github.com/edtechre/pybroker/)
+[![Github stars](https://img.shields.io/github/stars/inputdrive/pybroker?style=social)](https://github.com/inputdrive/pybroker/)
 [![Twitter](https://img.shields.io/twitter/follow/libpybroker?style=social)](https://twitter.com/intent/follow?screen_name=libpybroker)
 
 ## Algorithmic Trading in Python with Machine Learning
@@ -22,7 +22,7 @@ your strategy’s performance.
 * A super-fast backtesting engine built in [NumPy](https://numpy.org/) and accelerated with [Numba](https://numba.pydata.org/).
 * Easy creation of trading rules and models for executing across multiple instruments.
 * Integration of trading signals across [multiple time intervals](https://www.pybroker.com/en/latest/notebooks/15.%20Multiple%20Time%20Intervals.html), including daily, weekly, and monthly.
-* Access to historical data from [Alpaca](https://alpaca.markets/), [Yahoo Finance](https://finance.yahoo.com/), [AKShare](https://github.com/akfamily/akshare), or from [your own data provider](https://www.pybroker.com/en/latest/notebooks/7.%20Creating%20a%20Custom%20Data%20Source.html).
+* Access to historical data from [Alpaca](https://alpaca.markets/), [Yahoo Finance](https://finance.yahoo.com/), [AKShare](https://github.com/akfamily/akshare), Interactive Brokers paper (daily bars loaded as a DataFrame), or from [your own data provider](https://www.pybroker.com/en/latest/notebooks/7.%20Creating%20a%20Custom%20Data%20Source.html).
 * Model training and backtesting using [Walkforward Analysis](https://www.pybroker.com/en/latest/notebooks/6.%20Training%20a%20Model.html#Walkforward-Analysis), which simulates how the strategy would perform during actual trading.
 * Reliable trading metrics that use randomized [bootstrapping](https://en.wikipedia.org/wiki/Bootstrapping_(statistics)) to provide more accurate results.
 * [Parameter optimization](https://www.pybroker.com/en/latest/notebooks/12.%20Parameter%20Optimization.html) with [Optuna](https://optuna.org/) to select the best strategy parameters.
@@ -44,7 +44,7 @@ PyBroker using ``pip``:
 Or you can clone the Git repository with:
 
 ```bash
-   git clone https://github.com/edtechre/pybroker
+   git clone https://github.com/inputdrive/pybroker
 ```
 
 ## A Quick Example
@@ -103,6 +103,59 @@ snippets:
    result = strategy.walkforward(timeframe='1m', windows=5, train_size=0.5)
 ```
 
+## Current status
+
+This checkout is PyBroker 2.0.1. Greg Gutman is the licensor of the repository
+from 2026. Edward West's 2023 copyright remains on the original work.
+
+Yahoo Finance downloads from this Windows machine fail TLS verification
+when `yfinance` uses `certifi` or `curl_cffi` (`unable to get local issuer
+certificate`). `ssl.create_default_context()` reaches Yahoo, because that
+context includes the Windows root store. Export those roots to a PEM file
+and set `REQUESTS_CA_BUNDLE`, `SSL_CERT_FILE`, and `CURL_CA_BUNDLE` to that
+file before calling `YFinance`.
+
+IBKR Gateway paper is a working substitute. `ibgateway` 10.50 listens on
+`127.0.0.1:4002`. PyBroker has no IBKR data source. Install `ib_async`
+(pinned in `requirements.txt` at `>=2.1.0`; that pin also requires
+`tzdata<2026`) and pass the bars in as a DataFrame:
+
+```python
+   import pandas as pd
+   from ib_async import IB, Stock
+   from pybroker import Strategy
+
+   ib = IB()
+   ib.connect('127.0.0.1', 4002, clientId=19)
+   qualified = ib.qualifyContracts(Stock('NU', 'SMART', 'USD'))
+   bars = ib.reqHistoricalData(
+      qualified[0],
+      endDateTime='20261001 23:59:59 US/Eastern',
+      durationStr='2 Y',
+      barSizeSetting='1 day',
+      whatToShow='TRADES',
+      useRTH=True,
+      formatDate=1,
+   )
+   ib.disconnect()
+   frame = pd.DataFrame({
+      'date': pd.to_datetime([b.date for b in bars]),
+      'symbol': 'NU',
+      'open': [b.open for b in bars],
+      'high': [b.high for b in bars],
+      'low': [b.low for b in bars],
+      'close': [b.close for b in bars],
+      'volume': [b.volume for b in bars],
+   })
+   strategy = Strategy(frame, start_date='1/1/2025', end_date='10/1/2026')
+```
+
+That request returned 438 daily bars for NU, 2025-01-02 through 2026-10-01.
+The README's 10-day-high rule on those bars, and the same rule on the Yahoo
+series for the same window, each produced 32 trades. The two feeds are not
+the same prices, so the PnL figures differ. This is a data-path check, not
+a performance claim.
+
 ## User Guide
 
 - [Getting Started with Data Sources](https://www.pybroker.com/en/latest/notebooks/1.%20Getting%20Started%20with%20Data%20Sources.html)
@@ -140,10 +193,3 @@ PyBroker v2 now includes [AI agent skills](https://www.pybroker.com/en/latest/ag
 ## Online Documentation
 
 [The full reference documentation is hosted at **www.pybroker.com**.](https://www.pybroker.com)
-
-(For Chinese users: [中文文档](https://www.pybroker.com/zh_CN/latest/), courtesy of [Albert King](https://github.com/albertandking).)
-
-## Contact
-
-<img src="https://github.com/edtechre/pybroker/blob/master/docs/_static/email-image.png?raw=true">
-

@@ -1,17 +1,63 @@
+# Python bytecode and tool caches.
+# .mypy_cache and .ruff_cache also ship their own ignore files, but those
+# appear only after the tool has already written the directory.
+__pycache__/
+*.py[cod]
+*$py.class
+.mypy_cache/
+.ruff_cache/
+.dmypy.json
+.pytype/
+.pytest_cache/
+.hypothesis/
+.tox/
+.nox/
 .numba_config.yaml
-__pycache__
-.pybrokercache
-.venv*
-.tox
-**/.coverage
-**/.coverage.*
-docs/build
-docs/_build/
-docs/source/notebooks/.ipynb_checkpoints
+
+# Packaging and coverage.
 build/
 dist/
-src/lib_pybroker.egg-info
-.idea/
-.pytest_cache/
-**/locales/*/LC_MESSAGES/*.mo
+*.egg-info/
+.eggs/
+**/.coverage
+**/.coverage.*
+htmlcov/
+coverage.xml
+
+# Local environments and secrets.
+# .venv* also covers .venv-bench and other checkout-local envs.
+.venv*
+.env
+.env.*
+!.env.example
+.envrc
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+secrets.json
+
+# PyBroker and benchmark local state.
+.pybrokercache
 .asv/
+
+# Docs build output and notebook checkpoints.
+docs/build
+docs/_build/
+.ipynb_checkpoints/
+**/locales/*/LC_MESSAGES/*.mo
+
+# Local backtest dumps. Tracked fixtures under tests/testdata and
+# docs/source/notebooks/data stay committable.
+/sample_data.csv
+/equity_curve_*.csv
+
+# Editors and OS junk.
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*~
