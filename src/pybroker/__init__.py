@@ -7,18 +7,27 @@ This code is licensed under Apache 2.0 with Commons Clause license
 """
 
 from pybroker.cache import (
+    annotate_run as annotate_run,
     clear_caches as clear_caches,
     clear_data_source_cache as clear_data_source_cache,
     clear_indicator_cache as clear_indicator_cache,
     clear_model_cache as clear_model_cache,
+    clear_result_cache as clear_result_cache,
+    compare_runs as compare_runs,
     disable_caches as disable_caches,
     disable_data_source_cache as disable_data_source_cache,
     disable_indicator_cache as disable_indicator_cache,
     disable_model_cache as disable_model_cache,
+    disable_result_cache as disable_result_cache,
     enable_caches as enable_caches,
     enable_data_source_cache as enable_data_source_cache,
     enable_indicator_cache as enable_indicator_cache,
     enable_model_cache as enable_model_cache,
+    enable_result_cache as enable_result_cache,
+    get_run as get_run,
+    list_runs as list_runs,
+    record_run as record_run,
+    set_parent_run as set_parent_run,
 )
 from pybroker.common import (
     BarData as BarData,
@@ -98,7 +107,11 @@ from pybroker.parallel import (
     get_parallel_config as get_parallel_config,
     set_parallel as set_parallel,
 )
-from pybroker.strategy import Strategy as Strategy, TestResult as TestResult
+from pybroker.strategy import (
+    Strategy as Strategy,
+    TestResult as TestResult,
+    record_test_result as record_test_result,
+)
 from pybroker.interval import (
     TimeframeInterval as TimeframeInterval,
     compress_bars as compress_bars,

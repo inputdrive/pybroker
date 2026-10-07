@@ -8,15 +8,18 @@ This code is licensed under Apache 2.0 with Commons Clause license
 
 from __future__ import annotations
 
+import copy
 import os
 from collections import OrderedDict
 from pybroker.scope import StaticScope
 from dataclasses import dataclass, is_dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from diskcache import Cache
 from threading import RLock
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import Any, Final, Optional
+
+from pybroker.common import _json_safe
 
 _DEFAULT_CACHE_DIRNAME: Final = ".pybrokercache"
 
@@ -471,3 +474,230 @@ def clear_caches():
     clear_data_source_cache()
     clear_indicator_cache()
     clear_model_cache()
+
+
+_RESULT_KINDS: Final = frozenset({"backtest", "walkforward", "optimize"})
+_RESULT_SEQ_KEY: Final = "__seq__"
+_RESULT_ORDER_KEY: Final = "__order__"
+_MISSING: Final = object()
+
+
+def _run_key(run_id: str) -> str:
+    return f"run:{run_id}"
+
+
+def _note_key(run_id: str) -> str:
+    return f"note:{run_id}"
+
+
+def _require_result_cache() -> Cache:
+    cache = StaticScope.instance().result_cache
+    if cache is None:
+        raise ValueError("Result cache needs to be enabled before use.")
+    return cache
+
+
+def _is_number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def enable_result_cache(
+    namespace: str,
+    cache_dir: Optional[str] = None,
+) -> Cache:
+    """Enables a journal of backtest, walkforward, and optimize runs.
+
+    This is separate from :func:`enable_caches`. Those caches reuse inputs.
+    This one appends a record every time a strategy finishes, so it stays
+    off until a study asks for it.
+
+    The journal uses a plain :class:`diskcache.Cache`, not the in-process
+    L1 in front of the data caches. Run ids are a counter, and a memory
+    copy of that counter would hand two writers the same id.
+
+    Args:
+        namespace: Namespace of the journal. One namespace is one study.
+        cache_dir: Directory used to store the journal.
+
+    Returns:
+        :class:`diskcache.Cache` instance.
+    """
+    scope = StaticScope.instance()
+    cache_dir = _get_cache_dir(cache_dir, namespace, "results")
+    scope.result_cache_ns = namespace
+    scope.result_parent_id = None
+    cache = Cache(directory=cache_dir)
+    scope.result_cache = cache
+    scope.logger.debug_enable_result_cache(namespace, cache_dir)
+    return cache
+
+
+def disable_result_cache():
+    """Disables the run journal. Records already on disk are kept."""
+    scope = StaticScope.instance()
+    scope.result_cache = None
+    scope.result_cache_ns = ""
+    scope.result_parent_id = None
+    scope.logger.debug_disable_result_cache()
+
+
+def clear_result_cache():
+    """Clears the run journal. :func:`enable_result_cache` must be called
+    first.
+    """
+    scope = StaticScope.instance()
+    cache = scope.result_cache
+    if cache is None:
+        raise ValueError("Result cache needs to be enabled before clearing.")
+    cache.clear()
+    scope.result_parent_id = None
+    scope.logger.debug_clear_result_cache(cache.directory)
+
+
+def record_run(
+    *,
+    kind: str,
+    symbols: Iterable[str],
+    start_date: Any,
+    end_date: Any,
+    metrics: Mapping[str, Any],
+    params: Optional[Mapping[str, Any]] = None,
+    windows: int = 1,
+    extra: Optional[Mapping[str, Any]] = None,
+) -> str:
+    """Appends one run and returns its id.
+
+    The id is a zero-padded counter for this namespace, so listing runs
+    is chronological. The previous run is the parent unless
+    :func:`set_parent_run` named a different one for this call only.
+    """
+    if kind not in _RESULT_KINDS:
+        raise ValueError(
+            "Unknown run kind: "
+            f"{kind!r}. Expected one of {sorted(_RESULT_KINDS)}."
+        )
+    cache = _require_result_cache()
+    scope = StaticScope.instance()
+    explicit = scope.result_parent_id
+    if (
+        explicit is not None
+        and cache.get(_run_key(explicit), _MISSING) is _MISSING
+    ):
+        raise ValueError(f"Parent run not found: {explicit}.")
+    record_metrics = _json_safe(dict(metrics))
+    record_params = _json_safe(dict(params or {}))
+    record_extra = _json_safe(dict(extra or {}))
+    created_at = datetime.now(timezone.utc).isoformat()
+    with cache.transact():
+        seq = int(cache.get(_RESULT_SEQ_KEY, 0)) + 1
+        if explicit is not None:
+            parent: Optional[str] = explicit
+        else:
+            order = list(cache.get(_RESULT_ORDER_KEY, []))
+            parent = order[-1] if order else None
+        run_id = f"{seq:06d}"
+        record = {
+            "run_id": run_id,
+            "kind": kind,
+            "created_at": created_at,
+            "symbols": _json_safe(tuple(sorted(map(str, symbols)))),
+            "start_date": _json_safe(start_date),
+            "end_date": _json_safe(end_date),
+            "windows": windows,
+            "params": record_params,
+            "metrics": record_metrics,
+            "parent_id": parent,
+            "extra": record_extra,
+        }
+        cache.set(_RESULT_SEQ_KEY, seq)
+        cache.set(_run_key(run_id), record)
+        order = list(cache.get(_RESULT_ORDER_KEY, []))
+        order.append(run_id)
+        cache.set(_RESULT_ORDER_KEY, order)
+    if explicit is not None:
+        scope.result_parent_id = None
+    return run_id
+
+
+def list_runs() -> list[dict[str, Any]]:
+    """Returns every run in this namespace, oldest first."""
+    cache = _require_result_cache()
+    order = list(cache.get(_RESULT_ORDER_KEY, []))
+    return [get_run(run_id) for run_id in order]
+
+
+def get_run(run_id: str) -> dict[str, Any]:
+    """Returns one run, including its note when one was saved."""
+    cache = _require_result_cache()
+    record = cache.get(_run_key(run_id), _MISSING)
+    if record is _MISSING:
+        raise ValueError(f"Run not found: {run_id}.")
+    payload = copy.deepcopy(record)
+    note = cache.get(_note_key(run_id), _MISSING)
+    payload["note"] = None if note is _MISSING else copy.deepcopy(note)
+    return payload
+
+
+def annotate_run(
+    run_id: str,
+    *,
+    label: str = "",
+    comment: str = "",
+    overrides: Optional[Mapping[str, Any]] = None,
+) -> dict[str, Any]:
+    """Saves a note on a run. A later call replaces the note.
+
+    ``overrides`` are the knobs to try on the next run. They do not change
+    the metrics already stored for ``run_id``.
+    """
+    cache = _require_result_cache()
+    if cache.get(_run_key(run_id), _MISSING) is _MISSING:
+        raise ValueError(f"Run not found: {run_id}.")
+    note = {
+        "label": label,
+        "comment": comment,
+        "overrides": _json_safe(dict(overrides or {})),
+    }
+    cache.set(_note_key(run_id), note)
+    return copy.deepcopy(note)
+
+
+def set_parent_run(run_id: Optional[str]) -> None:
+    """Cites ``run_id`` as the parent of the next recorded run only.
+
+    ``None`` returns to citing whichever run was recorded last.
+    """
+    cache = _require_result_cache()
+    if (
+        run_id is not None
+        and cache.get(_run_key(run_id), _MISSING) is _MISSING
+    ):
+        raise ValueError(f"Run not found: {run_id}.")
+    StaticScope.instance().result_parent_id = run_id
+
+
+def compare_runs(
+    run_id: str,
+    baseline_id: Optional[str] = None,
+) -> dict[str, Any]:
+    """Returns numeric metric deltas of ``run_id`` against a baseline.
+
+    The baseline is ``baseline_id`` when given, otherwise the run's parent.
+    A run with no parent returns an empty ``deltas`` mapping.
+    """
+    run = get_run(run_id)
+    base_id = run["parent_id"] if baseline_id is None else baseline_id
+    if not base_id:
+        return {"run_id": run_id, "baseline_id": None, "deltas": {}}
+    baseline = get_run(base_id)
+    deltas: dict[str, dict[str, Any]] = {}
+    before_metrics = baseline["metrics"]
+    for name, after in run["metrics"].items():
+        before = before_metrics.get(name)
+        if _is_number(after) and _is_number(before):
+            deltas[name] = {
+                "before": before,
+                "after": after,
+                "delta": after - before,
+            }
+    return {"run_id": run_id, "baseline_id": base_id, "deltas": deltas}

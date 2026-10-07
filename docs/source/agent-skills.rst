@@ -9,7 +9,7 @@ Installation
 ------------
 
 Public skills live under the ``skills/`` directory in the PyBroker
-`Git repository <https://github.com/inputdrive/pybroker>`_. Each skill is
+`Git repository <https://github.com/inputdrive/lib-pybroker>`_. Each skill is
 contained in its own folder and defined by a standard ``SKILL.md`` file.
 
 The recommended way to install them is the `Skills CLI
@@ -19,7 +19,7 @@ Code, OpenAI Codex, Cursor, and many other coding agents:
 .. code-block:: bash
 
    # Inside your own working project directory:
-   npx skills add inputdrive/pybroker
+   npx skills add inputdrive/lib-pybroker
 
 The command asks which skills to install and which agents to install
 them for, then copies each one into that agent's skills folder. Add
@@ -34,7 +34,7 @@ yourself:
 
 .. code-block:: bash
 
-   git clone https://github.com/inputdrive/pybroker.git
+   git clone https://github.com/inputdrive/lib-pybroker.git
 
    # Inside your own working project directory:
    mkdir -p .claude/skills
@@ -142,7 +142,7 @@ pybroker-strategy-creator
    :end-before: ## Workflow
 
 `See full SKILL.md on GitHub
-<https://github.com/inputdrive/pybroker/blob/master/skills/pybroker-strategy-creator/SKILL.md>`_
+<https://github.com/inputdrive/lib-pybroker/blob/master/skills/pybroker-strategy-creator/SKILL.md>`_
 
 .. _skill-pybroker-indicator-creator:
 
@@ -155,7 +155,7 @@ pybroker-indicator-creator
    :end-before: ## Workflow
 
 `See full SKILL.md on GitHub
-<https://github.com/inputdrive/pybroker/blob/master/skills/pybroker-indicator-creator/SKILL.md>`_
+<https://github.com/inputdrive/lib-pybroker/blob/master/skills/pybroker-indicator-creator/SKILL.md>`_
 
 .. _skill-pybroker-model-trainer:
 
@@ -168,7 +168,7 @@ pybroker-model-trainer
    :end-before: ## Workflow
 
 `See full SKILL.md on GitHub
-<https://github.com/inputdrive/pybroker/blob/master/skills/pybroker-model-trainer/SKILL.md>`_
+<https://github.com/inputdrive/lib-pybroker/blob/master/skills/pybroker-model-trainer/SKILL.md>`_
 
 .. _skill-pybroker-optimize:
 
@@ -181,7 +181,7 @@ pybroker-optimize
    :end-before: ## Workflow
 
 `See full SKILL.md on GitHub
-<https://github.com/inputdrive/pybroker/blob/master/skills/pybroker-optimize/SKILL.md>`_
+<https://github.com/inputdrive/lib-pybroker/blob/master/skills/pybroker-optimize/SKILL.md>`_
 
 .. _skill-pybroker-multi-interval:
 
@@ -194,7 +194,7 @@ pybroker-multi-interval
    :end-before: ## Workflow
 
 `See full SKILL.md on GitHub
-<https://github.com/inputdrive/pybroker/blob/master/skills/pybroker-multi-interval/SKILL.md>`_
+<https://github.com/inputdrive/lib-pybroker/blob/master/skills/pybroker-multi-interval/SKILL.md>`_
 
 .. _skill-pybroker-rotational-trading:
 
@@ -207,4 +207,4 @@ pybroker-rotational-trading
    :end-before: ## Workflow
 
 `See full SKILL.md on GitHub
-<https://github.com/inputdrive/pybroker/blob/master/skills/pybroker-rotational-trading/SKILL.md>`_
+<https://github.com/inputdrive/lib-pybroker/blob/master/skills/pybroker-rotational-trading/SKILL.md>`_

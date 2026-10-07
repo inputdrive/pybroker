@@ -124,6 +124,7 @@ _UNPICKLED_CACHES: Final = (
     "data_source_cache",
     "indicator_cache",
     "model_cache",
+    "result_cache",
 )
 
 
@@ -140,6 +141,11 @@ class StaticScope:
         indicator_cache_ns: Namespace set for :attr:`.indicator_cache`.
         model_cache: :class:`diskcache.Cache` that stores trained models.
         model_cache_ns: Namespace set for :attr:`.model_cache`.
+        result_cache: :class:`diskcache.Cache` that stores backtest run
+            records.
+        result_cache_ns: Namespace set for :attr:`.result_cache`.
+        result_parent_id: Run id the next recorded run cites, or ``None``
+            to cite the previous run in the namespace.
         default_data_cols: Default data columns in :class:`pandas.DataFrame`
             retrieved from a :class:`pybroker.data.DataSource`.
         custom_data_cols: User-defined data columns in
@@ -157,6 +163,9 @@ class StaticScope:
         self.indicator_cache_ns: str = ""
         self.model_cache: Optional[Cache] = None
         self.model_cache_ns: str = ""
+        self.result_cache: Optional[Cache] = None
+        self.result_cache_ns: str = ""
+        self.result_parent_id: Optional[str] = None
         self._indicators = {}
         self._model_sources = {}
         self.default_data_cols = frozenset(

@@ -573,6 +573,15 @@ class Logger:
     def debug_clear_model_cache(self, cache_dir: str):
         self._debug(f"Cleared model cache: {cache_dir}")
 
+    def debug_enable_result_cache(self, ns: str, cache_dir: str):
+        self._debug(f"Enabled result cache:\nnamespace={ns}\ndir={cache_dir}")
+
+    def debug_disable_result_cache(self):
+        self._debug("Disabled result cache.")
+
+    def debug_clear_result_cache(self, cache_dir: str):
+        self._debug(f"Cleared result cache: {cache_dir}")
+
     def _out(self, msg: str, *args):
         if self._is_disabled():
             return

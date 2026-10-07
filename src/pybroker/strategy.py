@@ -12,7 +12,7 @@ import math
 import warnings
 import numpy as np
 import pandas as pd
-from pybroker.cache import CacheDateFields
+from pybroker.cache import CacheDateFields, record_run
 from pybroker.common import (
     BarData,
     DataCol,
@@ -1926,6 +1926,35 @@ class TestResult:
         )
 
 
+def record_test_result(
+    result: TestResult,
+    *,
+    kind: str,
+    params: Optional[dict[str, Any]] = None,
+    windows: int = 1,
+    extra: Optional[dict[str, Any]] = None,
+) -> Optional[str]:
+    """Appends ``result`` to the run journal when one is enabled.
+
+    Returns the new run id, or ``None`` when
+    :func:`pybroker.cache.enable_result_cache` has not been called.
+    The journal stores metrics, params, symbols, and dates. Trades, orders,
+    and bar frames stay on ``result``.
+    """
+    if StaticScope.instance().result_cache is None:
+        return None
+    return record_run(
+        kind=kind,
+        symbols=result.symbols,
+        start_date=result.start_date,
+        end_date=result.end_date,
+        metrics=result.metrics.to_json(),
+        params=params,
+        windows=windows,
+        extra=extra,
+    )
+
+
 class Strategy(
     BacktestMixin,
     EvaluateMixin,
@@ -2621,25 +2650,29 @@ class Strategy(
             :class:`.TestResult` containing portfolio balances, order
             history, and evaluation metrics.
         """
-        return self.walkforward(
-            windows=1,
-            lookahead=lookahead,
-            start_date=start_date,
-            end_date=end_date,
-            timeframe=timeframe,
-            between_time=between_time,
-            days=days,
-            train_size=train_size,
-            shuffle=shuffle,
-            calc_bootstrap=calc_bootstrap,
-            parallel_indicators=parallel_indicators,
-            parallel_models=parallel_models,
-            warmup=warmup,
-            portfolio=portfolio,
-            adjust=adjust,
-            seed=seed,
-            params=params,
-        )
+        self._pending_result_kind: Optional[str] = "backtest"
+        try:
+            return self.walkforward(
+                windows=1,
+                lookahead=lookahead,
+                start_date=start_date,
+                end_date=end_date,
+                timeframe=timeframe,
+                between_time=between_time,
+                days=days,
+                train_size=train_size,
+                shuffle=shuffle,
+                calc_bootstrap=calc_bootstrap,
+                parallel_indicators=parallel_indicators,
+                parallel_models=parallel_models,
+                warmup=warmup,
+                portfolio=portfolio,
+                adjust=adjust,
+                seed=seed,
+                params=params,
+            )
+        finally:
+            self._pending_result_kind = None
 
     def walkforward(
         self,
@@ -2861,7 +2894,7 @@ class Strategy(
             )
             if train_only:
                 self._logger.walkforward_completed()
-            return self._to_test_result(
+            result = self._to_test_result(
                 start_dt,
                 end_dt,
                 portfolio,
@@ -2871,6 +2904,24 @@ class Strategy(
                 seed,
                 frozenset(df[DataCol.SYMBOL.value].unique()),
             )
+            if not train_only:
+                kind = getattr(self, "_pending_result_kind", None)
+                if kind not in ("backtest", "walkforward"):
+                    kind = "walkforward"
+                try:
+                    record_test_result(
+                        result,
+                        kind=kind,
+                        params=run_hyperparams,
+                        windows=windows,
+                    )
+                except Exception as exc:
+                    warnings.warn(
+                        f"Result journal did not record this run: {exc}",
+                        UserWarning,
+                        stacklevel=2,
+                    )
+            return result
         finally:
             scope.unfreeze_data_cols()
 

@@ -8,6 +8,22 @@ from numba import njit
 pybroker.disable_progress_bar()
 pybroker.disable_logging()
 
+_DELTA_NAMES = ("total_pnl", "total_return_pct", "sharpe", "win_rate")
+
+
+def _show_delta(study):
+    latest = pybroker.list_runs()[-1]
+    print(f"recorded {study} {latest['run_id']}")
+    compared = pybroker.compare_runs(latest["run_id"])
+    if not compared["deltas"]:
+        print("no earlier run in this study")
+        return
+    for name in _DELTA_NAMES:
+        row = compared["deltas"].get(name)
+        if row is None:
+            continue
+        print(f"{name}: {row['before']} -> {row['after']} ({row['delta']})")
+
 SYMBOLS = (
     "OXY","VTI","SCHD","XLE","F","XLF","VXUS","BND","KBH","SPNT"
 )
@@ -76,16 +92,19 @@ def build_hhv_strategy():
 
 if __name__ == "__main__":
     print("=== Momentum 50/200 Walkforward ===")
+    pybroker.enable_result_cache("wf-momentum")
     s = build_momentum_strategy()
     wf = s.walkforward(windows=5, train_size=0.6,
                        lookahead=1, calc_bootstrap=True, parallel_indicators=False)
     print(wf.metrics_df.to_string())
-    # Save
     wf.metrics_df.to_csv("benchmarks/wf_momentum_metrics.csv")
+    _show_delta("wf-momentum")
 
     print("\n=== HHV/LLV Walkforward ===")
+    pybroker.enable_result_cache("wf-hhv")
     s2 = build_hhv_strategy()
     wf2 = s2.walkforward(windows=5, train_size=0.6,
                          lookahead=1, calc_bootstrap=True, parallel_indicators=False)
     print(wf2.metrics_df.to_string())
     wf2.metrics_df.to_csv("benchmarks/wf_hhv_metrics.csv")
+    _show_delta("wf-hhv")

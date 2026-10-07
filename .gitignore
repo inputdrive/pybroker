@@ -41,6 +41,7 @@ secrets.json
 # PyBroker and benchmark local state.
 .pybrokercache
 .asv/
+.audit/
 
 # Docs build output and notebook checkpoints.
 docs/build

@@ -1,11 +1,11 @@
-<img src="https://github.com/inputdrive/pybroker/blob/master/docs/_static/pybroker-logo.png?raw=true" alt="PyBroker">
+<img src="https://github.com/inputdrive/lib-pybroker/blob/master/docs/_static/pybroker-logo.png?raw=true" alt="PyBroker">
 
 [![python](https://img.shields.io/badge/python-v3-brightgreen.svg)](https://www.python.org/)
 [![Apache 2.0 with Commons Clause](https://img.shields.io/badge/license-Apache%202.0%20Clause-green)](https://www.pybroker.com/en/latest/license.html)
 [![Documentation Status](https://readthedocs.org/projects/pybroker/badge/?version=latest)](https://www.pybroker.com/en/latest/?badge=latest)
-[![Package status](https://github.com/inputdrive/pybroker/actions/workflows/main.yml/badge.svg?event=push)](https://github.com/inputdrive/pybroker/actions)
+[![Package status](https://github.com/inputdrive/lib-pybroker/actions/workflows/main.yml/badge.svg?event=push)](https://github.com/inputdrive/lib-pybroker/actions)
 [![Downloads](https://static.pepy.tech/badge/lib-pybroker)](https://pepy.tech/project/lib-pybroker)
-[![Github stars](https://img.shields.io/github/stars/inputdrive/pybroker?style=social)](https://github.com/inputdrive/pybroker/)
+[![Github stars](https://img.shields.io/github/stars/inputdrive/lib-pybroker?style=social)](https://github.com/inputdrive/lib-pybroker/)
 [![Twitter](https://img.shields.io/twitter/follow/libpybroker?style=social)](https://twitter.com/intent/follow?screen_name=libpybroker)
 
 ## Algorithmic Trading in Python with Machine Learning
@@ -44,7 +44,7 @@ PyBroker using ``pip``:
 Or you can clone the Git repository with:
 
 ```bash
-   git clone https://github.com/inputdrive/pybroker
+   git clone https://github.com/inputdrive/lib-pybroker
 ```
 
 ## A Quick Example

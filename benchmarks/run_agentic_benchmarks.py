@@ -7,6 +7,26 @@ from pybroker.vect import highv, lowv
 pybroker.disable_progress_bar()
 pybroker.disable_logging()
 
+_DELTA_NAMES = ("total_pnl", "total_return_pct", "sharpe", "win_rate")
+
+
+def _begin(study):
+    pybroker.enable_result_cache(study)
+
+
+def _show_delta(study):
+    latest = pybroker.list_runs()[-1]
+    print(f"recorded {study} {latest['run_id']}")
+    compared = pybroker.compare_runs(latest["run_id"])
+    if not compared["deltas"]:
+        print("no earlier run in this study")
+        return
+    for name in _DELTA_NAMES:
+        row = compared["deltas"].get(name)
+        if row is None:
+            continue
+        print(f"{name}: {row['before']} -> {row['after']} ({row['delta']})")
+
 SYMBOLS = (
     "OXY",
     "VTI",
@@ -62,9 +82,11 @@ def run_momentum():
                             returns("roc_50", "close", period=50),
                             indicator("sma_200", _sma200),
                         ])
+    _begin("momentum")
     result = strat.backtest(warmup=200)
     print("=== Momentum 50/200 ===")
     print(result.metrics_df.to_string())
+    _show_delta("momentum")
     return result
 
 def run_hhv_llv():
@@ -88,9 +110,11 @@ def run_hhv_llv():
 
     strat = Strategy(YFinance(), start_date=START, end_date=END)
     strat.add_execution(exec_fn, SYMBOLS, indicators=[hhv20, llv20])
+    _begin("hhv-llv")
     result = strat.backtest(warmup=20)
     print("=== HHV20/LLV20 Crossover ===")
     print(result.metrics_df.to_string())
+    _show_delta("hhv-llv")
     return result
 
 def run_buy_hold():
@@ -101,9 +125,11 @@ def run_buy_hold():
 
     strat = Strategy(YFinance(), start_date=START, end_date=END)
     strat.add_execution(exec_fn, SYMBOLS)
+    _begin("buy-hold")
     result = strat.backtest(warmup=1)
     print("=== Buy & Hold ===")
     print(result.metrics_df.to_string())
+    _show_delta("buy-hold")
     return result
 
 if __name__ == "__main__":

@@ -313,7 +313,7 @@ def build_run_hyperparams(
     return result
 
 
-from pybroker.cache import CacheDateFields
+from pybroker.cache import CacheDateFields, record_run
 from pybroker.common import (
     DataCol,
     IndicatorSymbol,
@@ -896,6 +896,44 @@ class OptimizeResult:
                 symbols=symbols,
             ),
             allow_nan=False,
+        )
+
+
+def _record_optimize_result(result: OptimizeResult) -> None:
+    """Writes the finished optimize run when the result cache is on."""
+    if StaticScope.instance().result_cache is None:
+        return
+    windows = result.windows
+    extra: dict[str, Any] = {
+        "best_score": result.best_score,
+        "n_trials": len(result.study.trials),
+    }
+    if windows is not None:
+        extra["window_scores"] = [
+            {
+                "train_score": window.train_score,
+                "params": window.params,
+                "test_start_date": window.test_start_date,
+                "test_end_date": window.test_end_date,
+            }
+            for window in windows
+        ]
+    try:
+        record_run(
+            kind="optimize",
+            symbols=result.result.symbols,
+            start_date=result.result.start_date,
+            end_date=result.result.end_date,
+            metrics=result.result.metrics.to_json(),
+            params=result.best_params,
+            windows=1 if windows is None else len(windows),
+            extra=extra,
+        )
+    except Exception as exc:
+        warnings.warn(
+            f"Result journal did not record this run: {exc}",
+            UserWarning,
+            stacklevel=2,
         )
 
 
@@ -1869,12 +1907,14 @@ class OptimizeMixin:
                 calc_bootstrap=calc_bootstrap,
                 pretrained_models=pretrained_models,
             )
-            return OptimizeResult(
+            recorded = OptimizeResult(
                 best_params=best_params,
                 best_score=study.best_value,
                 result=test_result,
                 study=study,
             )
+            _record_optimize_result(recorded)
+            return recorded
         finally:
             scope.unfreeze_data_cols()
             if hasattr(self, "_indicator_memo_max"):
@@ -2357,13 +2397,15 @@ class OptimizeMixin:
             symbols=_frame_symbols(df),
         )
         last = window_results[-1]
-        return OptimizeResult(
+        recorded = OptimizeResult(
             best_params=last.params,
             best_score=last.train_score,
             result=stitched,
             study=last.study,
             windows=tuple(window_results),
         )
+        _record_optimize_result(recorded)
+        return recorded
 
 
 def _static_symbols_from_executions(
