@@ -12,4 +12,4 @@ Or you can clone the Git repository with:
 
 .. code-block:: console
 
-    git clone https://github.com/inputdrive/lib-pybroker
+    git clone https://github.com/inputdrive/pybroker
